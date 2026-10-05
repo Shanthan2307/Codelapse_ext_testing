@@ -144,7 +144,7 @@ export class EventMonitor implements vscode.Disposable {
     const docSaveDisposable = vscode.workspace.onDidSaveTextDocument((doc) => {
       this.recordActivity();
       if (this.scope.contains(doc.uri)) {
-        this.frameworkDetector.dispatchDocumentSaved(doc);
+        this.frameworkDetector.dispatchDocumentSaved(doc, this.scope.relativePath(doc.uri));
       }
     });
 

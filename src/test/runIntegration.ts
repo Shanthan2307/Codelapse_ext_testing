@@ -17,6 +17,7 @@ const INSTALLED_VSCODE: Record<string, string> = {
 function createWorkspace(root: string): void {
   const files: Record<string, string> = {
     'projectA/src/a.js': '// project A\n',
+    'projectA/src/App.jsx': "import { useState } from 'react';\n",
     'projectA/index.html': '<div id="root"></div>\n<script type="module" src="/src/main.jsx"></script>\n',
     'projectB/b.js': '// project B\n'
   };

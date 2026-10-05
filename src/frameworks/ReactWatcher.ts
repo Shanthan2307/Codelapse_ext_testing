@@ -77,7 +77,7 @@ export class ReactWatcher implements IFrameworkWatcher {
   /**
    * Inspects saved React files for structural additions (Hooks, Components).
    */
-  public processDocumentSaved(document: vscode.TextDocument): void {
+  public processDocumentSaved(document: vscode.TextDocument, filePath: string): void {
     if (!this.sessionManager.isRecording()) return;
 
     const ext = document.fileName.split('.').pop()?.toLowerCase();
@@ -86,7 +86,6 @@ export class ReactWatcher implements IFrameworkWatcher {
     }
 
     const text = document.getText();
-    const filePath = document.uri?.fsPath || document.fileName;
 
     // Detect React Hook usages
     const hooksFound = new Set<string>();

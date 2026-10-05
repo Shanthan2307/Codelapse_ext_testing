@@ -11,6 +11,11 @@ export interface IFrameworkWatcher {
   /**
    * Inspects saved document contents for framework structural patterns.
    */
-  processDocumentSaved?(document: vscode.TextDocument): void;
+  /**
+   * Inspects a saved document for framework structural patterns. `filePath` is
+   * relative to the recorded folder; never record the absolute path, which
+   * would expose the user's directory layout and username.
+   */
+  processDocumentSaved?(document: vscode.TextDocument, filePath: string): void;
   dispose(): void;
 }

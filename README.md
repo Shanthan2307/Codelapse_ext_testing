@@ -225,9 +225,10 @@ End-to-end tests (`npm run test:integration`) launch a real VS Code with a throw
     ✔ records only files inside the chosen folder, with folder-relative paths
     ✔ starts every new session with a keyframe so it replays from disk
     ✔ switching folders saves the old session and records only the new folder
+    ✔ never writes absolute paths (or the username in them) into recordings
     ✔ saves chosen sessions as raw logs plus a working HTML report
 
-  5 passing (9s)
+  6 passing (10s)
 ```
 
 ---

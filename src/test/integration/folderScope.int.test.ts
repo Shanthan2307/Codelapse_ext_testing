@@ -136,6 +136,24 @@ describe('Folder-scoped recording (real VS Code)', () => {
     assert.strictEqual(lastContentOf(session!, 'b.js'), docB.getText());
   });
 
+  it('never writes absolute paths (or the username in them) into recordings', async () => {
+    await vscode.commands.executeCommand('codelapse.selectFolder', projectA);
+    // Saving a file that uses hooks triggers the React watcher's milestone.
+    const app = await typeInto(path.join(workspace, 'projectA', 'src', 'App.jsx'), '\nconst [n, setN] = useState(0);');
+    await app.save();
+    await sleep(300);
+    const session = await vscode.commands.executeCommand<Session>('codelapse.stopSession');
+
+    const hookEvent = session!.events.find((e) => e.type === 'framework' && e.detail?.includes('useState'));
+    assert.ok(hookEvent, 'saving a hook file should record a framework milestone');
+    assert.strictEqual(hookEvent!.filePath, 'src/App.jsx');
+
+    for (const file of fs.readdirSync(storageDir)) {
+      const text = fs.readFileSync(path.join(storageDir, file), 'utf-8');
+      assert.ok(!text.includes(workspace), `${file} must not contain the absolute workspace path`);
+    }
+  });
+
   it('saves chosen sessions as raw logs plus a working HTML report', async () => {
     // Record while a session is still running: the command must end it first.
     await vscode.commands.executeCommand('codelapse.selectFolder', projectA);

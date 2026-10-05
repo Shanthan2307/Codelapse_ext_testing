@@ -132,9 +132,9 @@ export class FrameworkDetector implements vscode.Disposable {
   /**
    * Dispatches document save events to active framework watchers.
    */
-  public dispatchDocumentSaved(document: vscode.TextDocument): void {
+  public dispatchDocumentSaved(document: vscode.TextDocument, filePath: string): void {
     for (const watcher of this.activeWatchers.values()) {
-      watcher.processDocumentSaved?.(document);
+      watcher.processDocumentSaved?.(document, filePath);
     }
   }
 
