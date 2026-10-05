@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { Session } from './models';
 import { SessionManager } from './tracker/SessionManager';
 import { DocumentTracker } from './tracker/DocumentTracker';
@@ -6,6 +7,7 @@ import { RecordingScope } from './tracker/RecordingScope';
 import { EventMonitor } from './events/EventMonitor';
 import { ReportPanel } from './webview/ReportPanel';
 import { ReportExporter } from './export/ReportExporter';
+import { SubmissionExporter, SubmissionOptions } from './export/SubmissionExporter';
 
 /** workspaceState key: the "choose a folder" prompt is shown once per workspace. */
 const PROMPTED_KEY = 'codelapse.folderPromptShown';
@@ -181,6 +183,46 @@ export function activate(context: vscode.ExtensionContext) {
     ReportPanel.createOrShow(context.extensionUri, sessionManager);
   });
 
+  const saveDataCmd = vscode.commands.registerCommand(
+    'codelapse.exportForSubmission',
+    async (options?: SubmissionOptions): Promise<vscode.Uri | undefined> => {
+      const interactive = !options?.destination;
+
+      // A running session's log is still being written: end it first so the
+      // copied files are complete.
+      if (sessionManager.getState() !== 'idle') {
+        if (interactive) {
+          const choice = await vscode.window.showWarningMessage(
+            'CodeLapse needs to stop the current recording before saving its data.',
+            { modal: true },
+            'Stop and Continue'
+          );
+          if (choice !== 'Stop and Continue') {
+            return undefined;
+          }
+        }
+        documentTracker.flushPending();
+        await sessionManager.end();
+        updateStatusBar();
+      }
+
+      const target = await SubmissionExporter.run(
+        context.extensionUri,
+        sessionManager,
+        recordingScope.getFolderName(),
+        options
+      );
+
+      if (target && interactive) {
+        await vscode.commands.executeCommand('revealFileInOS', target);
+        vscode.window.showInformationMessage(
+          `CodeLapse: Saved session data and HTML reports to "${path.basename(target.fsPath)}".`
+        );
+      }
+      return target;
+    }
+  );
+
   context.subscriptions.push(
     startCmd,
     selectFolderCmd,
@@ -188,6 +230,7 @@ export function activate(context: vscode.ExtensionContext) {
     showReportCmd,
     exportHtmlCmd,
     openReplayCmd,
+    saveDataCmd,
     sessionManager,
     recordingScope,
     documentTracker,

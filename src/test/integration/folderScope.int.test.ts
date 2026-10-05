@@ -135,4 +135,49 @@ describe('Folder-scoped recording (real VS Code)', () => {
     assert.deepStrictEqual([...files], ['b.js']);
     assert.strictEqual(lastContentOf(session!, 'b.js'), docB.getText());
   });
+
+  it('saves chosen sessions as raw logs plus a working HTML report', async () => {
+    // Record while a session is still running: the command must end it first.
+    await vscode.commands.executeCommand('codelapse.selectFolder', projectA);
+    const html = path.join(workspace, 'projectA', 'index.html');
+    const docHtml = await typeInto(html, '<!-- edited -->');
+
+    const destination = vscode.Uri.file(path.join(workspace, '..', 'exports'));
+    fs.mkdirSync(destination.fsPath, { recursive: true });
+    const target = await vscode.commands.executeCommand<vscode.Uri>('codelapse.exportForSubmission', {
+      destination,
+      includeAll: true
+    });
+    assert.ok(target, 'should return the created folder');
+
+    const saved = fs.readdirSync(target!.fsPath).sort();
+    const logs = sessionLogs();
+    // Every session: identical raw log, its .json snapshot, and an HTML report.
+    for (const log of logs) {
+      const base = path.basename(log, '.jsonl');
+      assert.ok(saved.includes(`${base}.jsonl`), `${base}.jsonl copied`);
+      assert.ok(saved.includes(`${base}.json`), `${base}.json copied`);
+      assert.ok(saved.includes(`${base}-report.html`), `${base}-report.html written`);
+      assert.strictEqual(
+        fs.readFileSync(path.join(target!.fsPath, `${base}.jsonl`), 'utf-8'),
+        fs.readFileSync(log, 'utf-8')
+      );
+    }
+
+    // The running session was ended before copying, so its log is complete.
+    const newestLog = fs.readFileSync(logs[logs.length - 1], 'utf-8');
+    assert.ok(newestLog.includes('"type":"session_end"'));
+
+    // The report for that session embeds code containing "</script>" and must
+    // still parse: the data script has to run to its own closing tag.
+    const newestBase = path.basename(logs[logs.length - 1], '.jsonl');
+    const report = fs.readFileSync(path.join(target!.fsPath, `${newestBase}-report.html`), 'utf-8');
+    const marker = 'window.__CODELAPSE_STANDALONE_DATA__ = ';
+    const start = report.indexOf(marker);
+    const dataScript = report.slice(start, report.indexOf('</script>', start));
+    const fakeWindow: any = {};
+    new Function('window', dataScript)(fakeWindow);
+    const embedded = fakeWindow.__CODELAPSE_STANDALONE_DATA__.session as Session;
+    assert.strictEqual(lastContentOf(embedded, 'index.html'), docHtml.getText());
+  });
 });

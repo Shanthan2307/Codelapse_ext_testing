@@ -17,6 +17,7 @@ const INSTALLED_VSCODE: Record<string, string> = {
 function createWorkspace(root: string): void {
   const files: Record<string, string> = {
     'projectA/src/a.js': '// project A\n',
+    'projectA/index.html': '<div id="root"></div>\n<script type="module" src="/src/main.jsx"></script>\n',
     'projectB/b.js': '// project B\n'
   };
   for (const [rel, content] of Object.entries(files)) {
@@ -39,7 +40,8 @@ async function main() {
   try {
     await runTests({
       vscodeExecutablePath,
-      extensionDevelopmentPath: path.resolve(__dirname, '../../'),
+      // CODELAPSE_EXTENSION_PATH lets the same tests run against an unpacked .vsix.
+      extensionDevelopmentPath: process.env.CODELAPSE_EXTENSION_PATH || path.resolve(__dirname, '../../'),
       extensionTestsPath: path.resolve(__dirname, './integration/index'),
       launchArgs: [
         workspace,

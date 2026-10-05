@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61dafb.svg)](https://reactjs.org/)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.85+-007acc.svg)](https://code.visualstudio.com/)
-[![Tests](https://img.shields.io/badge/Tests-32%20Passing%20(100%25)-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-34%20Passing%20(100%25)-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)]()
 
 ---
@@ -155,6 +155,7 @@ npm run test:integration
    - **`CodeLapse: Stop Recording Session`** (opens the report)
    - **`CodeLapse: Show Session Report & Analytics`**
    - **`CodeLapse: Export Standalone HTML Report`**
+   - **`CodeLapse: Save Session Data to Folder`** (copies chosen sessions' raw logs plus an HTML report into one folder to share)
 
 ---
 
@@ -209,7 +210,11 @@ CodeLapse includes a comprehensive Mocha test suite covering core analytics, del
     ✔ produces forward-slash paths relative to the chosen folder
     ✔ ignores files inside .git and node_modules
 
-  32 passing (270ms)
+  Standalone HTML Report Embedding Tests
+    ✔ never lets recorded code close the surrounding <script> tag
+    ✔ escapes HTML special characters in titles
+
+  34 passing (252ms)
 ```
 
 End-to-end tests (`npm run test:integration`) launch a real VS Code with a throwaway profile and a two-project workspace, make real edits, and verify what lands on disk:
@@ -220,8 +225,9 @@ End-to-end tests (`npm run test:integration`) launch a real VS Code with a throw
     ✔ records only files inside the chosen folder, with folder-relative paths
     ✔ starts every new session with a keyframe so it replays from disk
     ✔ switching folders saves the old session and records only the new folder
+    ✔ saves chosen sessions as raw logs plus a working HTML report
 
-  4 passing (8s)
+  5 passing (9s)
 ```
 
 ---

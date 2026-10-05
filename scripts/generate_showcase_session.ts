@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Session, Snapshot, RunEvent, SessionEvent } from '../src/models';
 import { computeSessionAnalytics } from '../src/analytics/engine';
 import { SessionSummarizer } from '../src/ai/SessionSummarizer';
+import { serializeForScript } from '../src/export/htmlSafety';
 
 /**
  * Generates an ultra-realistic, comprehensive full-stack coding session (React + Node.js Express + CSS + TS).
@@ -270,7 +271,7 @@ export function exportShowcaseFile(outputPath: string): void {
     webviewJsText = fs.readFileSync(webviewJsPath, 'utf-8');
   }
 
-  const initialPayload = JSON.stringify({
+  const initialPayload = serializeForScript({
     session,
     analytics,
     aiSummary,
