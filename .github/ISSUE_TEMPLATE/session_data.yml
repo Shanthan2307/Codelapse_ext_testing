@@ -1,0 +1,40 @@
+name: 📦 Session data submission
+description: Send your CodeLapse session data zip (public; use Google Drive if you prefer privacy).
+title: "[Data] "
+labels: ["session-data"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]
+        > This repository is **public**: anyone can download what you attach here. If you'd rather keep your data private, use the **Google Drive** option in the README instead.
+
+        Create your zip first with **CodeLapse: Save Session Data to Folder** (README, step 6).
+  - type: input
+    id: name
+    attributes:
+      label: Your name or alias
+      description: The same name you'll use in the feedback form.
+    validations:
+      required: true
+  - type: textarea
+    id: zip
+    attributes:
+      label: Your data zip
+      description: Drag your `<yourname>-codelapse-data.zip` into this box and wait for the upload to finish.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything we should know about your session? (optional)
+      description: E.g. "I restarted VS Code halfway", "I got interrupted for 20 minutes".
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Before you submit
+      options:
+        - label: The zip only contains sessions from my StudyBoard test project.
+          required: true
+        - label: I understand this repository is public and anyone can download my zip.
+          required: true
