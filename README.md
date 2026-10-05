@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61dafb.svg)](https://reactjs.org/)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.85+-007acc.svg)](https://code.visualstudio.com/)
-[![Tests](https://img.shields.io/badge/Tests-26%20Passing%20(100%25)-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-32%20Passing%20(100%25)-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)]()
 
 ---
@@ -30,7 +30,13 @@ We have pre-generated a complete, self-contained standalone demo report showcasi
 
 ## 🚀 Key Features
 
-### 1. 🎥 60 FPS Interactive Timelapse Player
+### 1. 📁 Folder-Scoped Recording
+- **You choose what gets recorded**: nothing is recorded until you pick the folder you are working in, either an open workspace folder or any folder via **Browse** (e.g. one assignment inside a course folder). You can also right-click a folder in the Explorer and choose **CodeLapse: Choose Folder to Record**.
+- **Only that folder**: edits to files outside it, and inside `.git` or `node_modules`, are ignored. Test/build runs from tasks or debug sessions that belong to another project are ignored too.
+- **Clean project paths**: files are stored relative to the chosen folder (`src/App.tsx`), so the replay shows the project's own structure.
+- **Remembered per workspace**: reopening VS Code resumes recording the same folder. The status bar always shows which folder is being recorded; switching folders saves the current session and starts a new one.
+
+### 2. 🎥 60 FPS Interactive Timelapse Player
 - **Smooth Typing Playback**: Instead of jumping between snapshots, the player diffs each snapshot against the previous version of the file (line-level LCS, trimmed to the exact changed characters) and animates the edit character by character, driven by `requestAnimationFrame`.
 - **Skip Idle**: Gaps where nothing was typed are glided across in a fraction of a second, so playback time is spent on actual coding.
 - **Scrubbable Timeline**: Time-based slider (the thumb lines up with run and milestone markers), snapshot stepping (`⏮️` / `⏭️`) and variable speeds (`1x`, `2x`, `5x`, `10x`).
@@ -39,12 +45,12 @@ We have pre-generated a complete, self-contained standalone demo report showcasi
 - **Syntax Highlighting**: Embedded PrismJS syntax engine supporting TypeScript, JavaScript, Python, CSS, JSON, HTML, etc.
 - **Multi-File Workspace Awareness**: Automatically transitions between files as edits jump across the project.
 
-### 2. 📊 24-Bucket Activity & Mini-Diff Heatmaps
+### 3. 📊 24-Bucket Activity & Mini-Diff Heatmaps
 - Slices the session duration into **24 proportional temporal buckets**.
 - **Interactive Mini-Diff Hover**: Hover over any bucket to see the exact time slice, character volume, and a mini-diff preview of lines added (`+`) and removed (`-`).
 - **Line Edit Heatmaps**: Algorithmic line diffing that highlights code churn and the most heavily modified lines.
 
-### 3. 🧠 Framework-Specific Intelligence
+### 4. 🧠 Framework-Specific Intelligence
 - **⚛️ React / Next.js / Vite**:
   - Intercepts Vite HMR updates (`[vite] hmr update <file>`) and Next.js Fast Refresh compilation timings.
   - Detects React Hook additions (`useState`, `useEffect`, custom hooks) and catches runtime render errors.
@@ -55,12 +61,14 @@ We have pre-generated a complete, self-contained standalone demo report showcasi
   - Intercepts `makemigrations` and `migrate` database schema executions (`Applying <app>.<migration>... OK`).
   - Tracks Django `StatReloader` changes and system check passes.
 
-### 4. 🤖 AI Session Intelligence & Summarizer
+> **Current limitation:** the terminal-output watchers above (HMR, nodemon, server ports, npm installs, migrations) rely on VS Code's *proposed* `terminalDataWriteEvent` API, which installed extensions are not allowed to use. Until they are moved to the stable shell-execution API, these milestones only appear in generated demo data. Test/build runs **are** recorded when launched as VS Code Tasks (**Terminal → Run Task…**) or debug sessions, and React hook usage is detected on save.
+
+### 5. 🤖 AI Session Intelligence & Summarizer
 - **Conventional Commit Generator**: Auto-generates structured messages (e.g. `feat(auth): ...` or `fix(jwt): ...`) based on net line counts and test results.
 - **Markdown PR Description**: Produces ready-to-copy GitHub Pull Request summaries with modified file tables, test pass rates, and session highlights.
 - **Daily Standup Report**: One-click summary formatted for Slack / Microsoft Teams.
 
-### 5. 📥 Standalone Single-File HTML Exporter
+### 6. 📥 Standalone Single-File HTML Exporter
 - Export your session to a standalone `.html` file that embeds the entire React dashboard, PrismJS highlighter, styles, and replay dataset.
 - Shareable with professors, teammates, and recruiters without requiring VS Code installed.
 
@@ -131,17 +139,22 @@ npm run compile
 
 # 4. Run automated test suite
 npm test
+
+# 5. Run end-to-end tests inside a real VS Code (opens a VS Code window briefly)
+npm run test:integration
 ```
 
 ### Running in VS Code
 1. Open the project folder in VS Code.
 2. Press **`F5`** (or go to **Run & Debug** and click **"Run CodeLapse Extension"**).
 3. An **`[Extension Development Host]`** window will open.
-4. In that window, write code, run terminal commands, and open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
+4. In that window, click **`CodeLapse: Choose folder`** in the status bar (or accept the prompt) and pick the folder you will work in. Only files inside it are recorded.
+5. Write code, run tests as VS Code Tasks, and use the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
+   - **`CodeLapse: Choose Folder to Record`**
+   - **`CodeLapse: Start Recording Session`**
+   - **`CodeLapse: Stop Recording Session`** (opens the report)
    - **`CodeLapse: Show Session Report & Analytics`**
    - **`CodeLapse: Export Standalone HTML Report`**
-   - **`CodeLapse: Stop Recording Session`**
-   - **`CodeLapse: Start Recording Session`**
 
 ---
 
@@ -188,7 +201,27 @@ CodeLapse includes a comprehensive Mocha test suite covering core analytics, del
     ✔ reports idle spans so the player can skip them
     ✔ steps between snapshot boundaries
 
-  26 passing (227ms)
+  Folder-Scoped Recording Path Tests
+    ✔ accepts the folder itself and anything beneath it
+    ✔ rejects parents, siblings, and look-alike sibling names
+    ✔ honours case-insensitive file systems only when asked to
+    ✔ detects overlapping folders in both directions
+    ✔ produces forward-slash paths relative to the chosen folder
+    ✔ ignores files inside .git and node_modules
+
+  32 passing (270ms)
+```
+
+End-to-end tests (`npm run test:integration`) launch a real VS Code with a throwaway profile and a two-project workspace, make real edits, and verify what lands on disk:
+
+```
+  Folder-scoped recording (real VS Code)
+    ✔ records nothing until a folder is chosen
+    ✔ records only files inside the chosen folder, with folder-relative paths
+    ✔ starts every new session with a keyframe so it replays from disk
+    ✔ switching folders saves the old session and records only the new folder
+
+  4 passing (8s)
 ```
 
 ---
@@ -217,6 +250,8 @@ codelapse_ext/
 │   ├── tracker/
 │   │   ├── DeltaEngine.ts             # Keyframe (I-Frame) & Delta (P-Frame) Compression
 │   │   ├── DocumentTracker.ts         # VS Code Text & Selection Event Ingestion
+│   │   ├── RecordingScope.ts          # Chosen Folder: Picker, Persistence & File Filtering
+│   │   ├── folderScope.ts             # Pure Path Containment & Relative-Path Helpers
 │   │   └── SessionManager.ts          # Local Persistence & Session Lifecycle Manager
 │   ├── ui/
 │   │   ├── playback/

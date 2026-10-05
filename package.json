@@ -3,6 +3,11 @@
   "displayName": "CodeLapse",
   "description": "Passive background recorder, analytics, and timelapse replays for VS Code",
   "version": "0.0.1",
+  "publisher": "shanthan2307",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shanthan2307/Codelapse_ext.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -15,11 +20,20 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
   "contributes": {
     "commands": [
       {
         "command": "codelapse.startSession",
         "title": "CodeLapse: Start Recording Session"
+      },
+      {
+        "command": "codelapse.selectFolder",
+        "title": "CodeLapse: Choose Folder to Record"
       },
       {
         "command": "codelapse.stopSession",
@@ -37,14 +51,24 @@
         "command": "codelapse.openReplay",
         "title": "CodeLapse: Open Session Replay & Analytics"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "codelapse.selectFolder",
+          "when": "explorerResourceIsFolder",
+          "group": "z_codelapse"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "webpack --mode production",
     "watch": "webpack --mode development --watch",
     "build": "webpack --mode production",
-    "test": "mocha -r ts-node/register 'src/test/suite/**/*.test.ts'"
+    "test": "mocha -r ts-node/register 'src/test/suite/**/*.test.ts'",
+    "test:integration": "npm run compile && tsc -p tsconfig.integration.json && node out/test/runIntegration.js"
   },
   "dependencies": {
     "@types/prismjs": "^1.26.6",

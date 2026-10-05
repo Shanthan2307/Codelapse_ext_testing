@@ -12,21 +12,24 @@ export class FrameworkDetector implements vscode.Disposable {
   constructor(private readonly sessionManager: SessionManager) {}
 
   /**
-   * Scans workspace root folders and activates corresponding framework watchers.
+   * Scans the recorded folder (or, without one, every workspace root) and
+   * activates the matching framework watchers. Safe to call again when the
+   * recorded folder changes: previously active watchers are replaced.
    */
-  public async initialize(): Promise<FrameworkType[]> {
+  public async initialize(root?: vscode.Uri): Promise<FrameworkType[]> {
+    this.disposeWatchers();
     const detected: FrameworkType[] = [];
 
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders || workspaceFolders.length === 0) {
+    const folders = root ? [root] : (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri);
+    if (folders.length === 0) {
       // Default to enabling Node and React watchers for generic JavaScript/TypeScript workspaces
       this.enableWatcher('node');
       this.enableWatcher('react');
       return ['node', 'react'];
     }
 
-    for (const folder of workspaceFolders) {
-      const detectedInFolder = await this.scanFolder(folder.uri);
+    for (const folder of folders) {
+      const detectedInFolder = await this.scanFolder(folder);
       for (const f of detectedInFolder) {
         if (!detected.includes(f)) {
           detected.push(f);
@@ -142,11 +145,15 @@ export class FrameworkDetector implements vscode.Disposable {
     return Array.from(this.activeWatchers.keys());
   }
 
-  public dispose(): void {
+  private disposeWatchers(): void {
     for (const watcher of this.activeWatchers.values()) {
       watcher.dispose();
     }
     this.activeWatchers.clear();
+  }
+
+  public dispose(): void {
+    this.disposeWatchers();
 
     for (const d of this.disposables) {
       d.dispose();

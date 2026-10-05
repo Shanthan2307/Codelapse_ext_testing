@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { RunEvent, SessionEvent } from '../models';
 import { SessionManager } from '../tracker/SessionManager';
+import { RecordingScope } from '../tracker/RecordingScope';
 import { FrameworkDetector } from '../frameworks/FrameworkDetector';
 
 export class EventMonitor implements vscode.Disposable {
@@ -17,6 +18,7 @@ export class EventMonitor implements vscode.Disposable {
 
   constructor(
     private readonly sessionManager: SessionManager,
+    private readonly scope: RecordingScope,
     idleThresholdMs: number = 5 * 60 * 1000 // 5 minutes default
   ) {
     this.idleThresholdMs = idleThresholdMs;
@@ -24,10 +26,30 @@ export class EventMonitor implements vscode.Disposable {
     this.setupListeners();
     this.resetIdleTimer();
 
-    // Initialize framework detection asynchronously
-    this.frameworkDetector.initialize().then((frameworks) => {
-      console.log('CodeLapse Frameworks Detected:', frameworks);
-    });
+    // Detect frameworks from the recorded folder, and again whenever it changes.
+    this.detectFrameworks();
+    this.disposables.push(this.scope.onDidChange(() => this.detectFrameworks()));
+  }
+
+  private detectFrameworks(): void {
+    this.frameworkDetector
+      .initialize(this.scope.getFolder() ?? undefined)
+      .then((frameworks) => console.log('CodeLapse Frameworks Detected:', frameworks))
+      .catch((err) => console.warn('CodeLapse framework detection failed:', err));
+  }
+
+  /**
+   * True unless the run clearly belongs to a different project: a task or
+   * debug session tied to a workspace folder that neither contains nor sits
+   * inside the recorded folder. Global/workspace-wide runs are kept.
+   */
+  private isRunInScope(folderUri: vscode.Uri | undefined): boolean {
+    return !folderUri || this.scope.overlaps(folderUri);
+  }
+
+  private taskFolder(task: vscode.Task): vscode.Uri | undefined {
+    const scope = task.scope;
+    return scope && typeof scope === 'object' ? scope.uri : undefined;
   }
 
   /**
@@ -50,6 +72,10 @@ export class EventMonitor implements vscode.Disposable {
       const startInfo = this.taskStartTimes.get(taskId);
       const durationMs = startInfo ? Date.now() - startInfo.startTime : 0;
       this.taskStartTimes.delete(taskId);
+
+      if (!this.isRunInScope(this.taskFolder(e.execution.task))) {
+        return;
+      }
 
       const success = e.exitCode === 0;
       const recentOutput = this.getRecentTerminalOutput();
@@ -80,6 +106,10 @@ export class EventMonitor implements vscode.Disposable {
       const startInfo = this.debugStartTimes.get(session.id);
       const durationMs = startInfo ? Date.now() - startInfo.startTime : 0;
       this.debugStartTimes.delete(session.id);
+
+      if (!this.isRunInScope(session.workspaceFolder?.uri)) {
+        return;
+      }
 
       const recentOutput = this.getRecentTerminalOutput();
 
@@ -113,7 +143,9 @@ export class EventMonitor implements vscode.Disposable {
     // 4. Document Save Hook for Framework Ast / Signature Detection
     const docSaveDisposable = vscode.workspace.onDidSaveTextDocument((doc) => {
       this.recordActivity();
-      this.frameworkDetector.dispatchDocumentSaved(doc);
+      if (this.scope.contains(doc.uri)) {
+        this.frameworkDetector.dispatchDocumentSaved(doc);
+      }
     });
 
     // 5. Activity detection via editor typing/selection
