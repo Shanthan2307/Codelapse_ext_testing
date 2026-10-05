@@ -35,6 +35,13 @@ function createCodeLapseFeedbackForm() {
 
   form
     .addMultipleChoiceItem()
+    .setTitle('Which guide did you follow?')
+    .setHelpText('Beginner guide = typed the exact code given. Main guide = wrote the code your own way.')
+    .setChoiceValues(['Beginner guide', 'Main guide'])
+    .setRequired(true);
+
+  form
+    .addMultipleChoiceItem()
     .setTitle('What best describes you?')
     .setChoiceValues([
       'High school student',

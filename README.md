@@ -6,6 +6,12 @@ This guide walks you through everything: installing the extension, building a sm
 
 **Total time: about 1.5–2 hours.**
 
+> [!TIP]
+> **🐣 New to coding? Use the [Beginner Guide](BEGINNER_GUIDE.md) instead.**
+> It walks you through every click and gives you the exact code to type into each file, so no coding experience is needed. You'll come back here only to send your data and feedback.
+>
+> **Already comfortable with JavaScript?** Follow this guide: you get the requirements and write the code your own way.
+
 | Step | What you do | Time |
 |---|---|---|
 | [1](#1-install-codelapse) | Install CodeLapse | 5 min |
@@ -58,7 +64,7 @@ CodeLapse is an attempt at a lightweight, code-aware record of the process.
 You need:
 
 - **[Visual Studio Code](https://code.visualstudio.com/) 1.85 or newer** (Help → About shows your version). Other editors based on VS Code (like Cursor) may work but are not tested.
-- **[Node.js](https://nodejs.org/) 20 or newer** (run `node --version` in a terminal). The LTS version is a good choice.
+- **[Node.js](https://nodejs.org/) 20.19 or newer** (run `node --version` in a terminal). The current LTS version is the easiest choice. The React tooling (Vite) doesn't run on older versions.
 - About 2 hours, ideally in one sitting.
 
 ## 1. Install CodeLapse
@@ -90,6 +96,8 @@ code --install-extension codelapse.vsix
 ## 3. Build StudyBoard (React + Node.js)
 
 Build a small **study task tracker**: a Node.js backend that stores tasks, and a React frontend to view and manage them.
+
+*New to coding? The [Beginner Guide](BEGINNER_GUIDE.md) has this same app with the exact code to type.*
 
 **Code the way you normally would.** Use documentation, search engines or AI assistants if that's what you usually do; the feedback form will simply ask what you used. There's no grade: an unfinished app is still useful data.
 
